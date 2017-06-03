@@ -27,23 +27,27 @@ func parseQuery(m *dns.Msg) {
 				config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 				c := new(dns.Client)
 
-				m := new(dns.Msg)
-				m.SetQuestion(dns.Fqdn(q.Name), q.Qtype)
-				m.RecursionDesired = true
+				msg := new(dns.Msg)
+				msg.SetQuestion(dns.Fqdn(q.Name), q.Qtype)
+				msg.RecursionDesired = true
 
-				r, _, err := c.Exchange(m, net.JoinHostPort(config.Servers[0], config.Port))
-				if r == nil {
-					log.Fatalf("*** error: %s\n", err.Error())
+				rr, _, err := c.Exchange(msg, net.JoinHostPort(config.Servers[0], config.Port))
+				if rr == nil {
+					log.Printf("*** error: %s\n", err.Error())
+					return
 				}
 
-				if r.Rcode != dns.RcodeSuccess {
-					log.Fatalf("*** Invalid Answer name %s ofter %d query for %s\n", q.Name, q.Qtype, q.Name)
+				if rr.Rcode != dns.RcodeSuccess {
+					log.Printf("*** Invalid Answer name %s ofter %d query for %s\n", q.Name, q.Qtype, q.Name)
+					return
 				}
 
-				for _, a := range r.Answer {
+				for _, a := range rr.Answer {
 					m.Answer = append(m.Answer, a)
 				}
 			}
+		default:
+			log.Fatalf("NoImpleted Type %d\n", q.Qtype)
 		}
 	}
 }

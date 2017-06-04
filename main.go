@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+var SERVER = "119.29.29.29" // https://support.dnspod.cn/Kb/showarticle/tsid/241
+var PORT = "53"
 var records = map[string]string{
 	"test.service.": "192.168.0.2",
 }
@@ -24,14 +26,13 @@ func parseQuery(m *dns.Msg) {
 					m.Answer = append(m.Answer, rr)
 				}
 			} else {
-				config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 				c := new(dns.Client)
 
 				msg := new(dns.Msg)
 				msg.SetQuestion(dns.Fqdn(q.Name), q.Qtype)
 				msg.RecursionDesired = true
 
-				rr, _, err := c.Exchange(msg, net.JoinHostPort(config.Servers[0], config.Port))
+				rr, _, err := c.Exchange(msg, net.JoinHostPort(SERVER, PORT))
 				if rr == nil {
 					log.Printf("*** error: %s\n", err.Error())
 					return
@@ -47,7 +48,8 @@ func parseQuery(m *dns.Msg) {
 				}
 			}
 		default:
-			log.Fatalf("NoImpleted Type %d\n", q.Qtype)
+			// TypeAAAA = 28
+			log.Printf("NoImpleted %s Type %d\n", q.Name, q.Qtype)
 		}
 	}
 }
